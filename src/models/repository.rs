@@ -2,7 +2,7 @@ use ::{Client, Response};
 
 use models::content::ContentMetadata;
 
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Deserialize, Clone, PartialEq)]
 #[serde(deny_unknown_fields)]
 pub struct RepositorySummary {
     #[serde(rename="resourceURI")]
@@ -82,13 +82,16 @@ impl Repository {
 }
 
 impl<'a> Response<'a, Repository> {
-    pub fn content_metadata_children_at<'b>(&'b self, path: &str) -> Vec<Response<'b, ContentMetadata>> {
+    pub fn content_metadata_children_at<'b>(&'b self, path: &str) -> Result<Vec<Response<'b, ContentMetadata>>, String> {
         let path = format!("service/local/repositories/{}/content/{}", self.item.id, path);
-        self.client.get_relative::<Vec<ContentMetadata>>(path.as_str()).unwrap().into()
+        self.client.get_relative::<Vec<ContentMetadata>>(path.as_str()).map(|x| x.into())
     }
 
-    pub fn all_content_metadata<'b>(&'b self) -> Vec<Response<'b, ContentMetadata>> {
-        self.content_metadata_children_at("").into_iter().flat_map(|c| c.with_descendants()).collect()
+    pub fn all_content_metadata<'b>(&'b self) -> Result<Vec<Response<'b, ContentMetadata>>, String> {
+        match self.content_metadata_children_at("") {
+            Ok(root_children) => Ok(root_children.into_iter().flat_map(|c| c.with_descendants().unwrap()).collect()),
+            Err(x) => Err(x)
+        }
     }
 }
 

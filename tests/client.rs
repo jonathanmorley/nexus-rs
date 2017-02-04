@@ -1,8 +1,10 @@
 extern crate nexus;
 extern crate mockito;
 
+mod fixtures;
+
 use nexus::Client;
-use mockito::mock;
+use nexus::models::repository::RepositorySummary;
 
 use std::str::FromStr;
 
@@ -15,19 +17,22 @@ fn invalid_url() {
 #[test]
 fn unresponsive_server() {
     let client = Client::from_str(mockito::SERVER_URL);
-    assert_eq!(client.err(), Some(String::from("Connection refused (os error 61)")));
+    assert!(client.is_err());
 }
 
 #[test]
 fn all_repositories() {
-    mock("GET", "/service/local/all_repositories")
-        .with_status(200)
-        .with_header("content-type", "application/json")
-        .with_body("{\"data\": []}")
-        .create_for(|| {
-            let client = Client::from_str(mockito::SERVER_URL);
-            assert!(client.is_ok());
-            let client = client.unwrap();
-            assert_eq!(client.all_repositories().len(), 0);
-        });
+    fixtures::test_repository::mock_repository_for(|| {
+        let client = Client::from_str(mockito::SERVER_URL);
+        assert!(client.is_ok());
+        let client = client.unwrap();
+
+        let all_repositories = client.all_repositories();
+        assert!(all_repositories.is_ok());
+        let all_repositories = all_repositories.unwrap().iter().map({|repo|
+            repo.item.to_owned()
+        }).collect::<Vec<RepositorySummary>>();
+
+        assert_eq!(all_repositories, vec![fixtures::test_repository::repository_summary()]);
+    });
 }

@@ -43,25 +43,30 @@ impl Client {
 
         let hyper_client = HyperClient::new();
 
-        if let Err(err) = hyper_client.get(url.as_str()).send() {
-            Err(err.to_string())
-        } else {
-            Ok(Client {
-                client: hyper_client,
-                headers: headers,
-                base_url: url,
-            })
+        match hyper_client.get(url.as_str()).send() {
+            Err(x) => Err(x.to_string()),
+            Ok(x) => {
+                if x.status == ::hyper::Ok {
+                    Ok(Client {
+                        client: hyper_client,
+                        headers: headers,
+                        base_url: url,
+                    })
+                } else {
+                    Err(String::from("Non-success error code"))
+                }
+            }
         }
     }
 
     pub fn get_absolute<'a, T: Deserialize>(&'a self, url: &str) -> Result<Response<'a, T>, String> {
         let url = Url::parse(url).unwrap();
-        let req = self.client.get(url).headers(self.headers.clone());
+        let req = self.client.get(url.clone()).headers(self.headers.clone());
         let res = req.send().unwrap();
 
         match serde_json::from_iter::<Bytes<HyperResponse>, DataContainer<T>>(res.bytes()) {
             Ok(data_container) => Ok(Response { client: self, item: data_container.data }),
-            Err(x) => Err(x.to_string())
+            Err(x) => { Err(format!("Error fetching {}, ({})", &url.to_string(), x.to_string())) }
         }
     }
 
@@ -69,8 +74,8 @@ impl Client {
         self.get_absolute::<T>(self.base_url.join(path).unwrap().as_str())
     }
 
-    pub fn all_repositories<'a>(&'a self) -> Vec<Response<'a, RepositorySummary>> {
-        self.get_relative::<Vec<RepositorySummary>>("service/local/all_repositories").unwrap().into()
+    pub fn all_repositories<'a>(&'a self) -> Result<Vec<Response<'a, RepositorySummary>>, String> {
+        self.get_relative::<Vec<RepositorySummary>>("service/local/all_repositories").map(|x| x.into())
     }
 
     pub fn repository(&self, id: &str) -> Result<Response<Repository>, String> {
