@@ -1,6 +1,7 @@
 use ::{Client, Response};
 
 use models::content::ContentMetadata;
+use hyper::client::Response as HyperResponse;
 
 #[derive(Debug, Deserialize, Clone, PartialEq)]
 #[serde(deny_unknown_fields)]
@@ -92,6 +93,11 @@ impl<'a> Response<'a, Repository> {
             Ok(root_children) => Ok(root_children.into_iter().flat_map(|c| c.with_descendants().unwrap()).collect()),
             Err(x) => Err(x)
         }
+    }
+
+    pub fn content_at<'b>(&'b self, path: &str) -> Result<Response<'a, HyperResponse>, String> {
+        let path = format!("service/local/repositories/{}/content/{}", self.item.id, path);
+        self.client.get_relative_raw(path.as_str())
     }
 }
 

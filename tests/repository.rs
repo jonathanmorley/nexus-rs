@@ -7,6 +7,7 @@ use nexus::Client;
 use nexus::models::content::ContentMetadata;
 
 use std::str::FromStr;
+use std::io::Read;
 
 #[test]
 fn repository_from_id() {
@@ -64,5 +65,26 @@ fn all_content_metadata() {
         }).collect::<Vec<ContentMetadata>>();
 
         assert_eq!(all_content_metadata, fixtures::test_repository::all_content_metadata());
+    });
+}
+
+#[test]
+fn content_at() {
+    fixtures::test_repository::mock_repository_for(|| {
+        let client = Client::from_str(mockito::SERVER_URL);
+        assert!(client.is_ok());
+        let client = client.unwrap();
+
+        let repository = client.repository("test-repository");
+        assert!(repository.is_ok());
+        let repository = repository.unwrap();
+
+        let content_at = repository.content_at("a/b/c");
+        assert!(content_at.is_ok());
+
+        let mut buffer = String::new();
+        content_at.unwrap().item.read_to_string(&mut buffer);
+
+        assert_eq!(buffer, "Test Content");
     });
 }

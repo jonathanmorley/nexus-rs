@@ -59,15 +59,27 @@ impl Client {
         }
     }
 
-    pub fn get_absolute<'a, T: Deserialize>(&'a self, url: &str) -> Result<Response<'a, T>, String> {
+    pub fn get_absolute_raw<'a>(&'a self, url: &str) -> Result<Response<'a, HyperResponse>, String> {
         let url = Url::parse(url).unwrap();
         let req = self.client.get(url.clone()).headers(self.headers.clone());
-        let res = req.send().unwrap();
-
-        match serde_json::from_iter::<Bytes<HyperResponse>, DataContainer<T>>(res.bytes()) {
-            Ok(data_container) => Ok(Response { client: self, item: data_container.data }),
+        match req.send() {
+            Ok(res) => Ok(Response { client: self, item: res }),
             Err(x) => { Err(format!("Error fetching {}, ({})", &url.to_string(), x.to_string())) }
         }
+    }
+
+    pub fn get_absolute<'a, T: Deserialize>(&'a self, url: &str) -> Result<Response<'a, T>, String> {
+        match self.get_absolute_raw(url) {
+            Ok(res) => match serde_json::from_iter::<Bytes<HyperResponse>, DataContainer<T>>(res.item.bytes()) {
+                Ok(data_container) => Ok(Response { client: self, item: data_container.data }),
+                Err(x) => { Err(format!("Error parsing {}, ({})", &url.to_string(), x.to_string())) }
+            },
+            Err(x) => Err(x)
+        }
+    }
+
+    pub fn get_relative_raw<'a>(&'a self, path: &str) -> Result<Response<'a, HyperResponse>, String> {
+        self.get_absolute_raw(self.base_url.join(path).unwrap().as_str())
     }
 
     pub fn get_relative<'a, T: Deserialize>(&'a self, path: &str) -> Result<Response<'a, T>, String> {

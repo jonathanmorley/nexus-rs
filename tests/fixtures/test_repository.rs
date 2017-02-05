@@ -134,7 +134,10 @@ pub fn mock_repository_for<F: Fn() -> ()>(environment: F) {
                     .with_body(content_metadata_string("a/b", false).as_str()).create_for(|| {
                         mock("GET", "/service/local/repositories/test-repository/content/a/b")
                         .with_body(content_metadata_string("a/b/c", true).as_str()).create_for(|| {
-                            environment();
+                            mock("GET", "/service/local/repositories/test-repository/content/a/b/c")
+                            .with_body("Test Content").create_for(|| {
+                                environment();
+                            });
                         });
                     });
                 });
