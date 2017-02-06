@@ -16,6 +16,6 @@ branches:
 deploy:
   # Deploy documentation
   - provider: script
-    script: cargo doc && mv target/doc docs && git add -f docs && git commit -m 'Add documentation' && git push -fq https://${GH_APIKEY}@github.com/${TRAVIS_REPO_SLUG}.git
+    script: cargo doc && mv target/doc docs && git add -fq docs && git commit -m 'Add documentation' && git push -fq https://${GH_APIKEY}@github.com/${TRAVIS_REPO_SLUG}.git master
     on:
       branch: master
