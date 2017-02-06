@@ -1,9 +1,9 @@
-extern crate nexus;
+extern crate nexus_rs;
 extern crate mockito;
 
 use fixtures::client::mock_nexus_for;
-use nexus::models::content::ContentMetadata;
-use nexus::models::repository::{RepositorySummary, Repository};
+use nexus_rs::models::content::ContentMetadata;
+use nexus_rs::models::repository::{RepositorySummary, Repository};
 use mockito::mock;
 
 fn repository_summary_string() -> String {

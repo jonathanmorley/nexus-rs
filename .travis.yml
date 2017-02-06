@@ -4,6 +4,23 @@ rust:
   - stable
   - beta
   - nightly
+
 matrix:
   allow_failures:
     - rust: nightly
+
+branches:
+  only:
+    - master
+
+deploy:
+  # Deploy documentation
+  - provider: script
+    script: |
+      cargo doc &&
+      echo "<meta http-equiv=refresh content=0;url=`echo $TRAVIS_REPO_SLUG | cut -d '/' -f 2`/index.html>" > target/doc/index.html &&
+      sudo pip install ghp-import &&
+      ghp-import -n target/doc &&
+      git push -fq https://${GH_APIKEY}@github.com/${TRAVIS_REPO_SLUG}.git gh-pages
+    on:
+      branch: master

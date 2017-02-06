@@ -1,10 +1,10 @@
-extern crate nexus;
+extern crate nexus_rs;
 extern crate mockito;
 
 mod fixtures;
 
-use nexus::Client;
-use nexus::models::repository::RepositorySummary;
+use nexus_rs::Client;
+use nexus_rs::models::repository::RepositorySummary;
 
 use std::str::FromStr;
 
