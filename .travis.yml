@@ -19,10 +19,14 @@ before_script:
 - |
   pip install 'travis-cargo<0.2' --user &&
   export PATH=$HOME/.local/bin:$PATH
-- if [[ TRAVIS_RUST_VERSION == "nightly" ]]; then cargo install clippy fi
+- bash -c 'if [[ "$TRAVIS_RUST_VERSION" == "nightly" ]]; then
+    cargo install clippy;
+  fi'
 script:
+- bash -c 'if [[ "$TRAVIS_RUST_VERSION" == "nightly" ]]; then
+    cargo clippy -- -D warnings;
+  fi'
 - |
-  if [[ TRAVIS_RUST_VERSION == "nightly" ]]; then cargo clippy -- -D warnings fi &&
   travis-cargo build &&
   travis-cargo test &&
   travis-cargo bench
