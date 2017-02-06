@@ -1,4 +1,12 @@
+sudo: false
 language: rust
+addons:
+  apt:
+    packages:
+    - libcurl4-openssl-dev
+    - libelf-dev
+    - libdw-dev
+    - binutils-dev
 rust:
 - stable
 - beta
@@ -10,15 +18,27 @@ before_script:
 - |
   pip install 'travis-cargo<0.2' --user &&
   export PATH=$HOME/.local/bin:$PATH
+- cargo install clippy
 script:
-- |
-  travis-cargo build &&
-  travis-cargo test &&
-  travis-cargo bench &&
-  travis-cargo --only stable doc
+- cargo clippy -- -D warnings
+- travis-cargo build
+- travis-cargo test
+- travis-cargo bench
 after_success:
-- travis-cargo --only stable doc-upload
-- travis-cargo coveralls --no-sudo
+- travis-cargo coveralls --no-sudo  --verify
+before_deploy:
+- travis-cargo --only stable doc
+- cargo package
+deploy:
+- provider: script
+  script: travis-cargo --only stable doc-upload
+  on:
+    branch: master
+- provider: script
+  script: cargo publish --token "$CRATESIO_TOKEN"
+  on:
+    tags: true
+    branch: master
 notifications:
   email:
     on_success: never
@@ -28,3 +48,4 @@ branches:
 env:
   global:
   - secure: QEkz4tUACfW+AIq2nHZ0v+Qzhx+8AOJlw012nEHjhmLCRvwdiodBn4pN7Ia8raoWJXbDdfk6Gy/OLATOpID73l5CZ+gBZLdPtcbhz0n5Gwg2LwsPT6ixtD2LTs54TrpegwDvdroyy9BP5B9YaArE4uA7usmv1NmHATM01uFuzCF0MfK1F7g3TAh5jxfcVmSHOcLqTqK3YQmhSg/def61ceFfWfryFUFUbOAa3KeTxJ93HsgSr4MEN8UwwV0Ik/PRZObWvIakbh+u+iGN3VNfTfEUqqbyX+x9+jrsxnXXTPnOMkhRN4P74pLx/gbn25jdM4gGWj7w5jzGmqM8orBBvfYLe6LcAYo5wCMPlpzfwxufFcnhinlha8vX5YcpI15FtEnERtOvwktl3dW1aA41C+jnP+fgmup/grzpCNolLPl0d5pfBK5Zvc/R3qbYhz521ZQC5uyq8bbRr1xFs7qgaltWtr2e/OXm0KeliOYzAfx2FcjfIrReiWqsDALaKxQyDNV+7nUc5PuESLYbehUSGzKkjZRYFfSB1n/PBYVaseFSB7+fBvDVmD1bm+pgdCztMcJygnSggAnBxzFA2lK/OETujpa2WTP15tVJqz0nxLn5RxVDfzkjCm2HC+hn7VDHNOKd8tixhXWksuiqtD5jbRmlxwUXHjT0lTWPrxTX4K8=
+  - secure: C5MlURz+Jejm/qEgsNFkcJrT634X08E2+Y+dERECTrY2ENILM/DDk6umx9C/shKcZTD+6QDdW0eRbjTh8qJ4kIJ8YZmvMNJrMvje/Ki1SUNLQAeLXb1o1wov7YsZOCcX6IvrECDCIyUjptxB0YoRiIbSrnRde3Nm1wMnbeagH4jpoFf0G1lOCCr1M8GLfX/1tKiX6IeDbN5qaYHLEaO93tBxc3a3zwjx0sHZr1ZtziWKeMXt/u8+ibwWjSRpI+X2etYx+cL/BeHKnEgg66NJsgbC2X2Yk9RaaSQMKSsztFdOvvrcBlxHnthDUHJtLqj4Fx+J3tMXFP+CPhuBARPpWwCauR7odb/pSB2DsyefP6tnRX6OqJaTti+fjvwa/boGNyGoPKM5YGBvMZ9p2qCyTQ+GBxjTr7oWZ4Uw6L1xAltY9UbCUIDSAqO9y7SqeTBN8GzmN3HIjc2BtLzXEMP4PXZZWcsdXXUtxypX4vkMCDah39hL5/Sl0nwUD7gM+9E26PwtKReEKBlX399MBx/xfG40Rl13gROrhKeHqOQjkDuUhbOAoB8E7QM7m/T3tqqSFLRn5ES784UDDC6uDA+nvqg1tyXNzKLac4L0eOTvsZDKUG5Yk+Xpo5CQBI97ELAGs1RAormYkv4pJhAxqiJ6l4S80WfAL3vqFlVdyq6vC0A=
