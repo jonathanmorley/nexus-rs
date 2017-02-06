@@ -52,7 +52,7 @@ fn content_metadata_string(path: &str, leaf: bool) -> String {
         "leaf": {},
         "lastModified": "1970-01-01 00:00:00.0 UTC",
         "sizeOnDisk": {}
-    }}]}}"#, resource_uri, path, path.split("/").last().unwrap(), leaf, if leaf { 1 } else { -1 })
+    }}]}}"#, resource_uri, path, path.split('/').last().unwrap(), leaf, if leaf { 1 } else { -1 })
 }
 
 #[allow(dead_code)]
@@ -106,7 +106,7 @@ pub fn content_metadata(path: &str, leaf: bool) -> ContentMetadata {
     ContentMetadata {
         resource_uri: String::from(format!("{}/service/local/repositories/test-repository/content/{}", mockito::SERVER_URL, path)),
         relative_path: String::from(path),
-        text: String::from(path.split("/").last().unwrap()),
+        text: String::from(path.split('/').last().unwrap()),
         leaf: leaf,
         last_modified: String::from("1970-01-01 00:00:00.0 UTC"),
         size_on_disk: if leaf { 1 } else { -1 },

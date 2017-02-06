@@ -83,7 +83,8 @@ fn content_at() {
         assert!(content_at.is_ok());
 
         let mut buffer = String::new();
-        content_at.unwrap().item.read_to_string(&mut buffer);
+        let read_result = content_at.unwrap().item.read_to_string(&mut buffer);
+        assert!(read_result.is_ok());
 
         assert_eq!(buffer, "Test Content");
     });

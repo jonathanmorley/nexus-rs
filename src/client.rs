@@ -86,7 +86,7 @@ impl Client {
         self.get_absolute::<T>(self.base_url.join(path).unwrap().as_str())
     }
 
-    pub fn all_repositories<'a>(&'a self) -> Result<Vec<Response<'a, RepositorySummary>>, String> {
+    pub fn all_repositories(&self) -> Result<Vec<Response<RepositorySummary>>, String> {
         self.get_relative::<Vec<RepositorySummary>>("service/local/all_repositories").map(|x| x.into())
     }
 

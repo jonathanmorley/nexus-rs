@@ -77,7 +77,7 @@ impl Repository {
         client.get_relative::<Repository>(path.as_str())
     }
 
-    pub fn from_summary<'a>(client: &'a Client, summary: RepositorySummary) -> Result<Response<'a, Self>, String> {
+    pub fn from_summary(client: &Client, summary: RepositorySummary) -> Result<Response<Self>, String> {
         Repository::from_id(client, summary.id.as_str())
     }
 }
@@ -88,7 +88,7 @@ impl<'a> Response<'a, Repository> {
         self.client.get_relative::<Vec<ContentMetadata>>(path.as_str()).map(|x| x.into())
     }
 
-    pub fn all_content_metadata<'b>(&'b self) -> Result<Vec<Response<'b, ContentMetadata>>, String> {
+    pub fn all_content_metadata(&self) -> Result<Vec<Response<ContentMetadata>>, String> {
         match self.content_metadata_children_at("") {
             Ok(root_children) => Ok(root_children.into_iter().flat_map(|c| c.with_descendants().unwrap()).collect()),
             Err(x) => Err(x)

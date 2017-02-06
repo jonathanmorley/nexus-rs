@@ -33,7 +33,7 @@ impl<'a, T: PartialEq> PartialEq for Response<'a, T> {
 
 impl<'a, T> Into<Vec<Response<'a, T>>> for Response<'a, Vec<T>> {
     fn into(self) -> Vec<Response<'a, T>> {
-        let client = self.client.clone();
+        let client = self.client;
         self.item.into_iter().map(move |elem| Response { client: client, item: elem }).collect()
     }
 }
