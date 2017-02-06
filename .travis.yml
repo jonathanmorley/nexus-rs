@@ -9,13 +9,26 @@ matrix:
   allow_failures:
     - rust: nightly
 
+before_script:
+- |
+  pip install 'travis-cargo<0.2' --user &&
+  export PATH=$HOME/.local/bin:$PATH
+
+script:
+- |
+  travis-cargo build &&
+  travis-cargo test &&
+  travis-cargo bench &&
+  travis-cargo --only stable doc
+
+after_success:
+- travis-cargo --only stable doc-upload
+- travis-cargo coveralls --no-sudo
+
+notifications:
+  email:
+    on_success: never
+
 branches:
   only:
     - master
-
-deploy:
-  # Deploy documentation
-  - provider: script
-    script: cargo doc && mv target/doc docs && git add -fq docs && git commit -m 'Add documentation' && git push -fq https://${GH_APIKEY}@github.com/${TRAVIS_REPO_SLUG}.git master
-    on:
-      branch: master
