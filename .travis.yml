@@ -17,10 +17,8 @@ deploy:
   # Deploy documentation
   - provider: script
     script: |
-      cargo doc &&
-      echo "<meta http-equiv=refresh content=0;url=`echo $TRAVIS_REPO_SLUG | cut -d '/' -f 2`/index.html>" > target/doc/index.html &&
-      sudo pip install ghp-import &&
-      ghp-import -n target/doc &&
-      git push -fq https://${GH_APIKEY}@github.com/${TRAVIS_REPO_SLUG}.git gh-pages
+      cargo doc && mv target/doc docs &&
+      git add -f docs && git commit -m 'Add documentation' &&
+      git push -fq https://${GH_APIKEY}@github.com/${TRAVIS_REPO_SLUG}.git
     on:
       branch: master
