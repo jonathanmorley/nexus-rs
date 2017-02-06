@@ -12,6 +12,7 @@ rust:
 - beta
 - nightly
 matrix:
+  fast_finish: true
   allow_failures:
   - rust: nightly
 before_script:
@@ -20,10 +21,11 @@ before_script:
   export PATH=$HOME/.local/bin:$PATH
 - cargo install clippy
 script:
-- cargo clippy -- -D warnings
-- travis-cargo build
-- travis-cargo test
-- travis-cargo bench
+- |
+  if [[ TRAVIS_RUST_VERSION == "nightly" ]]; then cargo clippy -- -D warnings fi &&
+  travis-cargo build &&
+  travis-cargo test &&
+  travis-cargo bench
 after_success:
 - travis-cargo coveralls --no-sudo  --verify
 before_deploy:
