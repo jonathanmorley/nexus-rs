@@ -2,6 +2,10 @@
 name = "nexus-rs"
 version = "0.1.0"
 authors = ["Morley, Jonathan <morley.jonathan@gmail.com>"]
+description = "Nexus (Package Repository) client"
+documentation = "https://jonathanmorley.github.io/nexus-rs/nexus_rs/index.html"
+repository = "https://github.com/jonathanmorley/nexus-rs"
+license = "Apache-2.0"
 
 [dependencies]
 hyper = "0.10"
