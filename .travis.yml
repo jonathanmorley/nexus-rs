@@ -31,11 +31,13 @@ script:
   travis-cargo test &&
   travis-cargo bench
 after_success:
-- travis-cargo coveralls --no-sudo  --verify
+
 before_deploy:
 - travis-cargo --only stable doc
 - cargo package
 deploy:
+- provider: script
+  script: travis-cargo coveralls --no-sudo  --verify
 - provider: script
   script: travis-cargo --only stable doc-upload
   on:
