@@ -30,23 +30,25 @@ script:
   travis-cargo build &&
   travis-cargo test &&
   travis-cargo bench
-after_success:
-
 before_deploy:
 - travis-cargo --only stable doc
 - cargo package
 deploy:
 - provider: script
   script: travis-cargo coveralls --no-sudo  --verify
+  on:
+    condition: "$TRAVIS_RUST_VERSION = stable"
 - provider: script
   script: travis-cargo --only stable doc-upload
   on:
     branch: master
+    condition: "$TRAVIS_RUST_VERSION = stable"
 - provider: script
   script: cargo publish --token "$CRATESIO_TOKEN"
   on:
     tags: true
     branch: master
+    condition: "$TRAVIS_RUST_VERSION = stable"
 notifications:
   email:
     on_success: never
