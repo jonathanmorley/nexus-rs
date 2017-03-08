@@ -1,10 +1,12 @@
 extern crate nexus_rs;
 extern crate mockito;
+extern crate time;
 
 use fixtures::client::mock_nexus_for;
 use nexus_rs::models::content::ContentMetadata;
 use nexus_rs::models::repository::{RepositorySummary, Repository};
 use mockito::mock;
+use self::time::Timespec;
 
 fn repository_summary_string() -> String {
     format!(r#"{{"data": [{{
@@ -69,7 +71,7 @@ pub fn repository_summary() -> RepositorySummary {
         format: String::from("site"),
         user_managed: true,
         exposed: true,
-        effective_local_storage_url: String::from("file:/sonatype-work/storage/test-repository/"),
+        local_storage_url: String::from("file:/sonatype-work/storage/test-repository/"),
         remote_uri: None,
     }
 }
@@ -92,7 +94,7 @@ pub fn repository() -> Repository {
         repo_policy: Some(String::from("MIXED")),
         checksum_policy: Some(String::from("IGNORE")),
         download_remote_indexes: false,
-        default_local_storage_url: String::from("file:/sonatype-work/storage/test-repository/"),
+        local_storage_url: String::from("file:/sonatype-work/storage/test-repository/"),
         remote_storage: None,
         file_type_validation: None,
         artifact_max_age: None,
@@ -108,7 +110,7 @@ pub fn content_metadata(path: &str, leaf: bool) -> ContentMetadata {
         relative_path: String::from(path),
         text: String::from(path.split('/').last().unwrap()),
         leaf: leaf,
-        last_modified: String::from("1970-01-01 00:00:00.0 UTC"),
+        last_modified: time::at_utc(Timespec::new(0, 0)),
         size_on_disk: if leaf { 1 } else { -1 },
     }
 }
@@ -116,6 +118,14 @@ pub fn content_metadata(path: &str, leaf: bool) -> ContentMetadata {
 #[allow(dead_code)]
 pub fn all_content_metadata() -> Vec<ContentMetadata> {
     vec![
+        ContentMetadata {
+            resource_uri: String::from("service/local/repositories/test-repository/content/"),
+            relative_path: String::from("/"),
+            text: String::from(""),
+            leaf: false,
+            last_modified: time::at_utc(Timespec::new(0, 0)),
+            size_on_disk: -1,
+        },
         content_metadata("a", false),
         content_metadata("a/b", false),
         content_metadata("a/b/c", true),

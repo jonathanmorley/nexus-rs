@@ -8,6 +8,7 @@ repository = "https://github.com/jonathanmorley/nexus-rs"
 license = "Apache-2.0"
 
 [dependencies]
+time = "0.1"
 hyper = "0.10"
 serde = "0.9"
 serde_derive = "0.9"

@@ -1,7 +1,7 @@
-use ::{Client, Response};
+use ::Client;
 
 use models::content::ContentMetadata;
-use hyper::client::Response as HyperResponse;
+use hyper::client::Response;
 
 #[derive(Debug, Deserialize, Clone, PartialEq)]
 #[serde(deny_unknown_fields)]
@@ -24,7 +24,7 @@ pub struct RepositorySummary {
     pub user_managed: bool,
     pub exposed: bool,
     #[serde(rename="effectiveLocalStorageUrl")]
-    pub effective_local_storage_url: String,
+    pub local_storage_url: String,
     #[serde(rename="remoteUri")]
     pub remote_uri: Option<String>,
 }
@@ -56,7 +56,7 @@ pub struct Repository {
     #[serde(rename="downloadRemoteIndexes")]
     pub download_remote_indexes: bool,
     #[serde(rename="defaultLocalStorageUrl")]
-    pub default_local_storage_url: String,
+    pub local_storage_url: String,
     #[serde(rename="remoteStorage")]
     pub remote_storage: Option<RemoteStorage>,
     #[serde(rename="fileTypeValidation")]
@@ -71,39 +71,41 @@ pub struct Repository {
     pub auto_block_active: Option<bool>,
 }
 
-impl Repository {
-    pub fn from_id<'a>(client: &'a Client, id: &str) -> Result<Response<'a, Self>, String> {
-        let path = format!("service/local/repositories/{}", id);
-        client.get_relative::<Repository>(path.as_str())
-    }
-
-    pub fn from_summary(client: &Client, summary: RepositorySummary) -> Result<Response<Self>, String> {
-        Repository::from_id(client, summary.id.as_str())
-    }
-}
-
-impl<'a> Response<'a, Repository> {
-    pub fn content_metadata_children_at<'b>(&'b self, path: &str) -> Result<Vec<Response<'b, ContentMetadata>>, String> {
-        let path = format!("service/local/repositories/{}/content/{}", self.item.id, path);
-        self.client.get_relative::<Vec<ContentMetadata>>(path.as_str()).map(|x| x.into())
-    }
-
-    pub fn all_content_metadata(&self) -> Result<Vec<Response<ContentMetadata>>, String> {
-        match self.content_metadata_children_at("") {
-            Ok(root_children) => Ok(root_children.into_iter().flat_map(|c| c.with_descendants().unwrap()).collect()),
-            Err(x) => Err(x)
-        }
-    }
-
-    pub fn content_at<'b>(&'b self, path: &str) -> Result<Response<'a, HyperResponse>, String> {
-        let path = format!("service/local/repositories/{}/content/{}", self.item.id, path);
-        self.client.get_relative_raw(path.as_str())
-    }
-}
-
 #[derive(Debug, Deserialize, Clone, PartialEq)]
 #[serde(deny_unknown_fields)]
 pub struct RemoteStorage {
     #[serde(rename="remoteStorageUrl")]
     pub remote_storage_url: String,
+}
+
+impl From<Repository> for RepositorySummary {
+    fn from(repository: Repository) -> Self {
+        Self {
+            resource_uri: format!("service/local/repositories/{}", repository.id),
+            content_resource_uri: repository.content_resource_uri,
+            id: repository.id,
+            name: repository.name,
+            repo_type: repository.repo_type,
+            repo_policy: repository.repo_policy,
+            provider: repository.provider,
+            provider_role: repository.provider_role,
+            format: repository.format,
+            user_managed: true,
+            exposed: repository.exposed,
+            local_storage_url: repository.local_storage_url,
+            remote_uri: repository.remote_storage.map(|rs| rs.remote_storage_url),
+        }
+    }
+}
+
+impl Client {
+    pub fn content_metadata_children_at(&self, repository: &Repository, path: &str) -> Result<Vec<ContentMetadata>, String> {
+        let path = format!("service/local/repositories/{}/content/{}", repository.id, path);
+        self.get::<Vec<ContentMetadata>>(path.as_str())
+    }
+
+    pub fn content_at(&self, repository: &Repository, path: &str) -> Result<Response, String> {
+        let path = format!("service/local/repositories/{}/content/{}", repository.id, path);
+        self.get_raw(path.as_str())
+    }
 }
