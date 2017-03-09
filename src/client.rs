@@ -1,4 +1,4 @@
-use ::error;
+use error;
 
 use models::container::DataContainer;
 use models::repository::{RepositorySummary, Repository};
@@ -23,7 +23,7 @@ pub fn parse_response<T: Deserialize>(response: Response) -> error::Result<T> {
     let bytes = response.bytes();
     match serde_json::from_iter::<Bytes<Response>, DataContainer<T>>(bytes) {
         Ok(data_container) => Ok(data_container.data),
-        Err(x) => Err(x.into())
+        Err(x) => Err(x.into()),
     }
 }
 
@@ -61,21 +61,21 @@ impl Client {
     }
 
     pub fn all_repositories(&self) -> error::Result<Vec<RepositorySummary>> {
-        let res = self.fetch("service/local/all_repositories")?;
-        parse_response::<Vec<RepositorySummary>>(res)
+        parse_response::<Vec<RepositorySummary>>(self.fetch("service/local/all_repositories")?)
     }
 
     pub fn repository(&self, id: &str) -> error::Result<Repository> {
-        let res = self.fetch(&format!("service/local/repositories/{}", id))?;
-        parse_response::<Repository>(res)
+        parse_response::<Repository>(self.fetch(&format!("service/local/repositories/{}", id))?)
     }
 
     fn parse_url(&self, url: &str) -> Result<Url, ParseError> {
         match url.into_url() {
             Ok(url) => Ok(url),
-            Err(err) => match err {
-                ParseError::RelativeUrlWithoutBase => self.base_url.join(url),
-                _ => Err(err)
+            Err(err) => {
+                match err {
+                    ParseError::RelativeUrlWithoutBase => self.base_url.join(url),
+                    _ => Err(err),
+                }
             }
         }
     }

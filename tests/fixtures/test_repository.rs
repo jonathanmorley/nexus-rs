@@ -21,7 +21,9 @@ fn repository_summary_string() -> String {
         "userManaged": true,
         "exposed": true,
         "effectiveLocalStorageUrl": "file:/sonatype-work/storage/test-repository/"
-    }}]}}"#, mockito::SERVER_URL, mockito::SERVER_URL)
+    }}]}}"#,
+            mockito::SERVER_URL,
+            mockito::SERVER_URL)
 }
 
 fn repository_string() -> String {
@@ -42,11 +44,14 @@ fn repository_string() -> String {
         "checksumPolicy": "IGNORE",
         "downloadRemoteIndexes": false,
         "defaultLocalStorageUrl": "file:/sonatype-work/storage/test-repository/"
-    }}}}"#, mockito::SERVER_URL)
+    }}}}"#,
+            mockito::SERVER_URL)
 }
 
 fn content_metadata_string(path: &str, leaf: bool) -> String {
-    let resource_uri = format!("{}/service/local/repositories/test-repository/content/{}", mockito::SERVER_URL, path);
+    let resource_uri = format!("{}/service/local/repositories/test-repository/content/{}",
+                               mockito::SERVER_URL,
+                               path);
     format!(r#"{{"data": [{{
         "resourceURI": "{}",
         "relativePath": "{}",
@@ -54,14 +59,21 @@ fn content_metadata_string(path: &str, leaf: bool) -> String {
         "leaf": {},
         "lastModified": "1970-01-01 00:00:00.0 UTC",
         "sizeOnDisk": {}
-    }}]}}"#, resource_uri, path, path.split('/').last().unwrap(), leaf, if leaf { 1 } else { -1 })
+    }}]}}"#,
+            resource_uri,
+            path,
+            path.split('/').last().unwrap(),
+            leaf,
+            if leaf { 1 } else { -1 })
 }
 
 #[allow(dead_code)]
 pub fn repository_summary() -> RepositorySummary {
     RepositorySummary {
-        resource_uri: String::from(format!("{}/service/local/repositories/test-repository", mockito::SERVER_URL)),
-        content_resource_uri: Some(String::from(format!("{}/content/sites/test-repository", mockito::SERVER_URL))),
+        resource_uri: String::from(format!("{}/service/local/repositories/test-repository",
+                                           mockito::SERVER_URL)),
+        content_resource_uri: Some(String::from(format!("{}/content/sites/test-repository",
+                                                        mockito::SERVER_URL))),
         id: String::from("test-repository"),
         name: String::from("Test Repository"),
         repo_type: String::from("hosted"),
@@ -79,7 +91,8 @@ pub fn repository_summary() -> RepositorySummary {
 #[allow(dead_code)]
 pub fn repository() -> Repository {
     Repository {
-        content_resource_uri: Some(String::from(format!("{}/content/sites/test-repository", mockito::SERVER_URL))),
+        content_resource_uri: Some(String::from(format!("{}/content/sites/test-repository",
+                                                        mockito::SERVER_URL))),
         id: String::from("test-repository"),
         name: String::from("Test Repository"),
         provider: String::from("site"),
@@ -106,9 +119,14 @@ pub fn repository() -> Repository {
 
 pub fn content_metadata(path: &str, leaf: bool) -> ContentMetadata {
     ContentMetadata {
-        resource_uri: String::from(format!("{}/service/local/repositories/test-repository/content/{}", mockito::SERVER_URL, path)),
+        resource_uri: String::from(format!("{}/service/local/repositories/{}/content/{}",
+                                           mockito::SERVER_URL,
+                                           "test-repository",
+                                           path)),
         relative_path: String::from(path),
-        text: String::from(path.split('/').last().unwrap()),
+        text: String::from(path.split('/')
+            .last()
+            .expect("String splitting error occured creating test fixture")),
         leaf: leaf,
         last_modified: time::at_utc(Timespec::new(0, 0)),
         size_on_disk: if leaf { 1 } else { -1 },
@@ -117,30 +135,32 @@ pub fn content_metadata(path: &str, leaf: bool) -> ContentMetadata {
 
 #[allow(dead_code)]
 pub fn all_content_metadata() -> Vec<ContentMetadata> {
-    vec![
-        ContentMetadata {
-            resource_uri: String::from("service/local/repositories/test-repository/content/"),
-            relative_path: String::from("/"),
-            text: String::from(""),
-            leaf: false,
-            last_modified: time::at_utc(Timespec::new(0, 0)),
-            size_on_disk: -1,
-        },
-        content_metadata("a", false),
-        content_metadata("a/b", false),
-        content_metadata("a/b/c", true),
-    ]
+    vec![ContentMetadata {
+             resource_uri: String::from("service/local/repositories/test-repository/content/"),
+             relative_path: String::from("/"),
+             text: String::from(""),
+             leaf: false,
+             last_modified: time::at_utc(Timespec::new(0, 0)),
+             size_on_disk: -1,
+         },
+         content_metadata("a", false),
+         content_metadata("a/b", false),
+         content_metadata("a/b/c", true)]
 }
 
 pub fn mock_repository_for<F: Fn() -> ()>(environment: F) {
     mock_nexus_for(|| {
         mock("GET", "/service/local/all_repositories")
-        .with_body(repository_summary_string().as_str()).create_for(|| {
-            mock("GET", "/service/local/repositories/test-repository")
-            .with_body(repository_string().as_str()).create_for(|| {
-                mock("GET", "/service/local/repositories/test-repository/content/")
-                .with_body(content_metadata_string("a", false).as_str()).create_for(|| {
-                    mock("GET", "/service/local/repositories/test-repository/content/a")
+            .with_body(repository_summary_string().as_str())
+            .create_for(|| {
+                mock("GET", "/service/local/repositories/test-repository")
+                    .with_body(repository_string().as_str())
+                    .create_for(|| {
+                        mock("GET",
+                             "/service/local/repositories/test-repository/content/")
+                            .with_body(content_metadata_string("a", false).as_str())
+                            .create_for(|| {
+                                mock("GET", "/service/local/repositories/test-repository/content/a")
                     .with_body(content_metadata_string("a/b", false).as_str()).create_for(|| {
                         mock("GET", "/service/local/repositories/test-repository/content/a/b")
                         .with_body(content_metadata_string("a/b/c", true).as_str()).create_for(|| {
@@ -150,8 +170,8 @@ pub fn mock_repository_for<F: Fn() -> ()>(environment: F) {
                             });
                         });
                     });
-                });
+                            });
+                    });
             });
-        });
     });
 }

@@ -1,6 +1,6 @@
-use ::error;
-use ::client::{Client, parse_response};
-use ::models::repository::Repository;
+use error;
+use client::{Client, parse_response};
+use models::repository::Repository;
 
 use time::{self, Tm, Timespec};
 
@@ -27,38 +27,41 @@ impl From<Repository> for ContentMetadata {
             text: String::from(""),
             leaf: false,
             last_modified: time::at_utc(Timespec::new(0, 0)),
-            size_on_disk: -1
+            size_on_disk: -1,
         }
     }
 }
 
 impl Client {
-    pub fn children<'a, T: Into<&'a ContentMetadata>>(&self, content_metadata: T) -> error::Result<Vec<ContentMetadata>> {
+    pub fn children<'a, T: Into<&'a ContentMetadata>>(&self,
+                                                      content_metadata: T)
+                                                      -> error::Result<Vec<ContentMetadata>> {
         let content_metadata = content_metadata.into();
         if content_metadata.leaf {
             Ok(Vec::new())
         } else {
             match self.fetch(&content_metadata.resource_uri) {
                 Ok(res) => parse_response::<Vec<ContentMetadata>>(res),
-                Err(x) => Err(x)
+                Err(x) => Err(x),
             }
         }
     }
 
-    pub fn with_descendants<T: Into<ContentMetadata>>(&self, content_metadata: T) -> error::Result<Vec<ContentMetadata>> {
+    pub fn with_descendants<T: Into<ContentMetadata>>(&self,
+                                                      content_metadata: T)
+                                                      -> error::Result<Vec<ContentMetadata>> {
         let content_metadata = content_metadata.into();
-        match self.children(&content_metadata) {
-            Ok(children) => {
-                let mut descendants = if children.is_empty() {
-                    children
-                } else {
-                    children.iter().flat_map(|child| self.with_descendants(child.clone()).unwrap()).collect::<Vec<ContentMetadata>>()
-                };
+        let children = self.children(&content_metadata)?;
 
-                descendants.insert(0, content_metadata);
-                Ok(descendants)
-            },
-            Err(x) => Err(x)
-        }
+        let mut descendants = if children.is_empty() {
+            children
+        } else {
+            children.iter()
+                .flat_map(|child| self.with_descendants(child.clone()).unwrap())
+                .collect::<Vec<ContentMetadata>>()
+        };
+
+        descendants.insert(0, content_metadata);
+        Ok(descendants)
     }
 }

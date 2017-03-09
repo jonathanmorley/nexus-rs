@@ -1,5 +1,5 @@
-use ::error;
-use ::client::{Client, parse_response};
+use error;
+use client::{Client, parse_response};
 
 use models::content::ContentMetadata;
 use hyper::client::Response;
@@ -100,14 +100,16 @@ impl From<Repository> for RepositorySummary {
 }
 
 impl Client {
-    pub fn content_metadata_children_at(&self, repository: &Repository, path: &str) -> error::Result<Vec<ContentMetadata>> {
-        match self.fetch(&format!("service/local/repositories/{}/content/{}", repository.id, path)) {
-            Ok(res) => parse_response::<Vec<ContentMetadata>>(res),
-            Err(x) => Err(x)
-        }
+    pub fn content_metadata_at(&self,
+                               repository: &Repository,
+                               path: &str)
+                               -> error::Result<Vec<ContentMetadata>> {
+        parse_response::<Vec<ContentMetadata>>(self.content_at(repository, path)?)
     }
 
     pub fn content_at(&self, repository: &Repository, path: &str) -> error::Result<Response> {
-        self.fetch(&format!("service/local/repositories/{}/content/{}", repository.id, path))
+        self.fetch(&format!("service/local/repositories/{}/content/{}",
+                            repository.id,
+                            path))
     }
 }

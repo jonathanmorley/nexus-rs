@@ -10,7 +10,6 @@ license = "Apache-2.0"
 [dependencies]
 time = "0.1"
 hyper = "0.10"
-matches = "0.1"
 serde = "0.9"
 serde_derive = "0.9"
 serde_json = "0.9"
