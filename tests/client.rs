@@ -1,14 +1,21 @@
 extern crate nexus_rs;
 extern crate mockito;
+extern crate hyper;
+
+#[macro_use]
+extern crate matches;
 
 mod fixtures;
 
 use nexus_rs::Client;
+use nexus_rs::error::NexusError::*;
+use hyper::error::ParseError::*;
 
 #[test]
 fn invalid_url() {
     let client = Client::new("INVALID_URL");
-    assert_eq!(client.err(), Some(String::from("relative URL without a base")));
+    println!("{:?}", client);
+    matches!(client.err(), Some(UrlParse(RelativeUrlWithoutBase)));
 }
 
 #[test]

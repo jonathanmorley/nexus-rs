@@ -1,3 +1,5 @@
+use ::error;
+
 use models::container::DataContainer;
 use models::repository::{RepositorySummary, Repository};
 
@@ -17,12 +19,17 @@ pub struct Client {
     base_url: Url,
 }
 
+pub fn parse_response<T: Deserialize>(response: Response) -> error::Result<T> {
+    let bytes = response.bytes();
+    match serde_json::from_iter::<Bytes<Response>, DataContainer<T>>(bytes) {
+        Ok(data_container) => Ok(data_container.data),
+        Err(x) => Err(x.into())
+    }
+}
+
 impl Client {
-    pub fn new<U: IntoUrl>(base_url: U) -> Result<Self, String> {
-        let base_url = match base_url.into_url() {
-            Ok(url) => url,
-            Err(x) => return Err(x.to_string())
-        };
+    pub fn new<U: IntoUrl>(base_url: U) -> error::Result<Self> {
+        let base_url = base_url.into_url()?;
 
         let mut headers = Headers::new();
 
@@ -34,59 +41,33 @@ impl Client {
         headers.set(Accept(vec![qitem(Mime(TopLevel::Application, SubLevel::Json, vec![]))]));
 
         let hyper_client = HyperClient::new();
-
-        match hyper_client.get(base_url.as_str()).send() {
-            Err(x) => Err(x.to_string()),
-            Ok(x) => {
-                if x.status == ::hyper::Ok {
-                    Ok(Client {
-                        client: hyper_client,
-                        headers: headers,
-                        base_url: base_url,
-                    })
-                } else {
-                    Err(String::from("Non-success error code"))
-                }
-            }
+        let res = hyper_client.get(base_url.as_str()).send()?;
+        if res.status == ::hyper::Ok {
+            Ok(Client {
+                client: hyper_client,
+                headers: headers,
+                base_url: base_url,
+            })
+        } else {
+            Err(error::NexusError::Server(String::from("Non-success error code")))
         }
     }
 
-    pub fn get_raw(&self, url: &str) -> Result<Response, String> {
-        let url = self.parse_url(url).unwrap();
-
-        println!("{:?}", url);
+    pub fn fetch(&self, url: &str) -> error::Result<Response> {
+        let url = self.parse_url(url)?;
 
         let req = self.client.get(url.clone()).headers(self.headers.clone());
-        match req.send() {
-            Ok(res) => Ok(res),
-            Err(x) => { Err(format!("Error fetching {}, ({})", &url.to_string(), x.to_string())) }
-        }
+        req.send().map_err(|err| err.into())
     }
 
-    pub fn get<T: Deserialize>(&self, url: &str) -> Result<T, String> {
-        match self.get_raw(url) {
-            Ok(res) => {
-                let bytes = res.bytes();
-                match serde_json::from_iter::<Bytes<Response>, DataContainer<T>>(bytes) {
-                    Ok(data_container) => Ok(data_container.data),
-                    Err(x) => { Err(format!("Error parsing {} ({})", url, x.to_string())) }
-                }
-            },
-            Err(x) => Err(x)
-        }
+    pub fn all_repositories(&self) -> error::Result<Vec<RepositorySummary>> {
+        let res = self.fetch("service/local/all_repositories")?;
+        parse_response::<Vec<RepositorySummary>>(res)
     }
 
-    pub fn all_repositories(&self) -> Result<Vec<RepositorySummary>, String> {
-        self.get::<Vec<RepositorySummary>>("service/local/all_repositories")
-    }
-
-    pub fn repository(&self, id: &str) -> Result<Repository, String> {
-        let path = format!("service/local/repositories/{}", id);
-        self.get::<Repository>(path.as_str())
-    }
-
-    pub fn repository_from_summary(&self, summary: RepositorySummary) -> Result<Repository, String> {
-        self.repository(summary.id.as_str())
+    pub fn repository(&self, id: &str) -> error::Result<Repository> {
+        let res = self.fetch(&format!("service/local/repositories/{}", id))?;
+        parse_response::<Repository>(res)
     }
 
     fn parse_url(&self, url: &str) -> Result<Url, ParseError> {

@@ -1,4 +1,5 @@
-use ::Client;
+use ::error;
+use ::client::{Client, parse_response};
 use ::models::repository::Repository;
 
 use time::{self, Tm, Timespec};
@@ -32,17 +33,19 @@ impl From<Repository> for ContentMetadata {
 }
 
 impl Client {
-    pub fn children<'a, T: Into<&'a ContentMetadata>>(&self, content_metadata: T) -> Result<Vec<ContentMetadata>, String> {
-        let content_metadata: &ContentMetadata = content_metadata.into();
+    pub fn children<'a, T: Into<&'a ContentMetadata>>(&self, content_metadata: T) -> error::Result<Vec<ContentMetadata>> {
+        let content_metadata = content_metadata.into();
         if content_metadata.leaf {
             Ok(Vec::new())
         } else {
-            let children_uri = content_metadata.resource_uri.as_str();
-            self.get::<Vec<ContentMetadata>>(children_uri)
+            match self.fetch(&content_metadata.resource_uri) {
+                Ok(res) => parse_response::<Vec<ContentMetadata>>(res),
+                Err(x) => Err(x)
+            }
         }
     }
 
-    pub fn with_descendants<T: Into<ContentMetadata>>(&self, content_metadata: T) -> Result<Vec<ContentMetadata>, String> {
+    pub fn with_descendants<T: Into<ContentMetadata>>(&self, content_metadata: T) -> error::Result<Vec<ContentMetadata>> {
         let content_metadata = content_metadata.into();
         match self.children(&content_metadata) {
             Ok(children) => {
