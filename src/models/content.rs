@@ -23,7 +23,7 @@ pub struct ContentMetadata {
 
 impl From<Repository> for ContentMetadata {
     fn from(repository: Repository) -> Self {
-        Self {
+        ContentMetadata {
             resource_uri: format!("service/local/repositories/{}/content/", repository.id),
             relative_path: PathBuf::from("/"),
             text: String::from(""),

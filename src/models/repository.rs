@@ -82,7 +82,7 @@ pub struct RemoteStorage {
 
 impl From<Repository> for RepositorySummary {
     fn from(repository: Repository) -> Self {
-        Self {
+        RepositorySummary {
             resource_uri: format!("service/local/repositories/{}", repository.id),
             content_resource_uri: repository.content_resource_uri,
             id: repository.id,
