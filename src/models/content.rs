@@ -3,6 +3,7 @@ use client::{Client, parse_response};
 use models::repository::Repository;
 
 use std::iter;
+use std::path::PathBuf;
 use time::{self, Tm, Timespec};
 
 #[derive(Debug, Deserialize, Clone, PartialEq)]
@@ -11,7 +12,7 @@ pub struct ContentMetadata {
     #[serde(rename="resourceURI")]
     pub resource_uri: String,
     #[serde(rename="relativePath")]
-    pub relative_path: String,
+    pub relative_path: PathBuf,
     pub text: String,
     pub leaf: bool,
     #[serde(rename="lastModified", with="::deserializers::datetime")]
@@ -24,7 +25,7 @@ impl From<Repository> for ContentMetadata {
     fn from(repository: Repository) -> Self {
         Self {
             resource_uri: format!("service/local/repositories/{}/content/", repository.id),
-            relative_path: String::from("/"),
+            relative_path: PathBuf::from("/"),
             text: String::from(""),
             leaf: false,
             last_modified: time::at_utc(Timespec::new(0, 0)),

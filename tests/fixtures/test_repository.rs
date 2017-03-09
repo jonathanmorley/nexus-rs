@@ -1,11 +1,14 @@
+extern crate hyper;
 extern crate nexus_rs;
 extern crate mockito;
 extern crate time;
 
 use fixtures::client::mock_nexus_for;
+use self::hyper::Url;
 use nexus_rs::models::content::ContentMetadata;
 use nexus_rs::models::repository::{RepositorySummary, Repository};
 use mockito::mock;
+use std::path::PathBuf;
 use self::time::Timespec;
 
 fn repository_summary_string() -> String {
@@ -83,7 +86,7 @@ pub fn repository_summary() -> RepositorySummary {
         format: String::from("site"),
         user_managed: true,
         exposed: true,
-        local_storage_url: String::from("file:/sonatype-work/storage/test-repository/"),
+        local_storage_url: Url::parse("file:/sonatype-work/storage/test-repository/").expect("Url parsing error creating fixture"),
         remote_uri: None,
     }
 }
@@ -107,7 +110,7 @@ pub fn repository() -> Repository {
         repo_policy: Some(String::from("MIXED")),
         checksum_policy: Some(String::from("IGNORE")),
         download_remote_indexes: false,
-        local_storage_url: String::from("file:/sonatype-work/storage/test-repository/"),
+        local_storage_url: Url::parse("file:/sonatype-work/storage/test-repository/").expect("Url parsing error creating fixture"),
         remote_storage: None,
         file_type_validation: None,
         artifact_max_age: None,
@@ -123,7 +126,7 @@ pub fn content_metadata(path: &str, leaf: bool) -> ContentMetadata {
                                            mockito::SERVER_URL,
                                            "test-repository",
                                            path)),
-        relative_path: String::from(path),
+        relative_path: PathBuf::from(path),
         text: String::from(path.split('/')
             .last()
             .expect("String splitting error occured creating test fixture")),
@@ -137,7 +140,7 @@ pub fn content_metadata(path: &str, leaf: bool) -> ContentMetadata {
 pub fn all_content_metadata() -> Vec<ContentMetadata> {
     vec![ContentMetadata {
              resource_uri: String::from("service/local/repositories/test-repository/content/"),
-             relative_path: String::from("/"),
+             relative_path: PathBuf::from("/"),
              text: String::from(""),
              leaf: false,
              last_modified: time::at_utc(Timespec::new(0, 0)),

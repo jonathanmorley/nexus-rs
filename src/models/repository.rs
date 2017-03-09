@@ -2,6 +2,7 @@ use error;
 use client::{Client, parse_response};
 
 use models::content::ContentMetadata;
+use hyper::Url;
 use hyper::client::Response;
 
 #[derive(Debug, Deserialize, Clone, PartialEq)]
@@ -24,8 +25,8 @@ pub struct RepositorySummary {
     #[serde(rename="userManaged")]
     pub user_managed: bool,
     pub exposed: bool,
-    #[serde(rename="effectiveLocalStorageUrl")]
-    pub local_storage_url: String,
+    #[serde(rename="effectiveLocalStorageUrl", with="::deserializers::url")]
+    pub local_storage_url: Url,
     #[serde(rename="remoteUri")]
     pub remote_uri: Option<String>,
 }
@@ -56,8 +57,8 @@ pub struct Repository {
     pub checksum_policy: Option<String>,
     #[serde(rename="downloadRemoteIndexes")]
     pub download_remote_indexes: bool,
-    #[serde(rename="defaultLocalStorageUrl")]
-    pub local_storage_url: String,
+    #[serde(rename="defaultLocalStorageUrl", with="::deserializers::url")]
+    pub local_storage_url: Url,
     #[serde(rename="remoteStorage")]
     pub remote_storage: Option<RemoteStorage>,
     #[serde(rename="fileTypeValidation")]
