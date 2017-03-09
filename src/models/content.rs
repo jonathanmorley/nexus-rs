@@ -2,6 +2,7 @@ use error;
 use client::{Client, parse_response};
 use models::repository::Repository;
 
+use std::iter;
 use time::{self, Tm, Timespec};
 
 #[derive(Debug, Deserialize, Clone, PartialEq)]
@@ -40,10 +41,8 @@ impl Client {
         if content_metadata.leaf {
             Ok(Vec::new())
         } else {
-            match self.fetch(&content_metadata.resource_uri) {
-                Ok(res) => parse_response::<Vec<ContentMetadata>>(res),
-                Err(x) => Err(x),
-            }
+            let res = self.fetch(&content_metadata.resource_uri)?;
+            parse_response::<Vec<ContentMetadata>>(res)
         }
     }
 
@@ -51,17 +50,11 @@ impl Client {
                                                       content_metadata: T)
                                                       -> error::Result<Vec<ContentMetadata>> {
         let content_metadata = content_metadata.into();
-        let children = self.children(&content_metadata)?;
+        let children = self.children(&content_metadata);
 
-        let mut descendants = if children.is_empty() {
-            children
-        } else {
-            children.iter()
-                .flat_map(|child| self.with_descendants(child.clone()).unwrap())
-                .collect::<Vec<ContentMetadata>>()
-        };
-
-        descendants.insert(0, content_metadata);
-        Ok(descendants)
+        Ok(iter::once(content_metadata)
+            .chain(children?.into_iter()
+                .flat_map(|child| self.with_descendants(child).unwrap()))
+            .collect::<Vec<ContentMetadata>>())
     }
 }

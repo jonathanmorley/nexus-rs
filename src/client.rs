@@ -54,10 +54,11 @@ impl Client {
     }
 
     pub fn fetch(&self, url: &str) -> error::Result<Response> {
-        let url = self.parse_url(url)?;
-
-        let req = self.client.get(url.clone()).headers(self.headers.clone());
-        req.send().map_err(|err| err.into())
+        self.client
+            .get(self.parse_url(url)?)
+            .headers(self.headers.clone())
+            .send()
+            .map_err(|err| err.into())
     }
 
     pub fn all_repositories(&self) -> error::Result<Vec<RepositorySummary>> {
