@@ -1,6 +1,6 @@
 [package]
 name = "nexus-rs"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Morley, Jonathan <morley.jonathan@gmail.com>"]
 description = "Nexus (Package Repository) client"
 documentation = "https://jonathanmorley.github.io/nexus-rs/nexus_rs/index.html"
