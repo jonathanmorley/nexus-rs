@@ -86,7 +86,8 @@ pub fn repository_summary() -> RepositorySummary {
         format: String::from("site"),
         user_managed: true,
         exposed: true,
-        local_storage_url: Url::parse("file:/sonatype-work/storage/test-repository/").expect("Url parsing error creating fixture"),
+        local_storage_url: Url::parse("file:/sonatype-work/storage/test-repository/")
+            .expect("Url parsing error creating fixture"),
         remote_uri: None,
     }
 }
@@ -110,7 +111,8 @@ pub fn repository() -> Repository {
         repo_policy: Some(String::from("MIXED")),
         checksum_policy: Some(String::from("IGNORE")),
         download_remote_indexes: false,
-        local_storage_url: Url::parse("file:/sonatype-work/storage/test-repository/").expect("Url parsing error creating fixture"),
+        local_storage_url: Url::parse("file:/sonatype-work/storage/test-repository/")
+            .expect("Url parsing error creating fixture"),
         remote_storage: None,
         file_type_validation: None,
         artifact_max_age: None,

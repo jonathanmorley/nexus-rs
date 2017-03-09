@@ -54,8 +54,9 @@ impl Client {
         let children = self.children(&content_metadata);
 
         Ok(iter::once(content_metadata)
-            .chain(children?.into_iter()
-                .flat_map(|child| self.with_descendants(child).unwrap()))
+            .chain(children?
+                    .into_iter()
+                    .flat_map(|child| self.with_descendants(child).unwrap()))
             .collect::<Vec<ContentMetadata>>())
     }
 }
