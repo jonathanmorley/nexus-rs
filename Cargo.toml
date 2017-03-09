@@ -1,13 +1,19 @@
 [package]
 name = "nexus-rs"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Morley, Jonathan <morley.jonathan@gmail.com>"]
+description = "Nexus (Package Repository) client"
+documentation = "https://jonathanmorley.github.io/nexus-rs/nexus_rs/index.html"
+repository = "https://github.com/jonathanmorley/nexus-rs"
+license = "Apache-2.0"
 
 [dependencies]
+time = "0.1"
 hyper = "0.10"
 serde = "0.9"
 serde_derive = "0.9"
 serde_json = "0.9"
+quick-error = "1.1"
 
 [dev-dependencies]
 mockito = "0.2"
