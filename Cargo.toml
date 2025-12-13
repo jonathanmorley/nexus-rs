@@ -16,4 +16,4 @@ serde_json = "0.9"
 quick-error = "1.1"
 
 [dev-dependencies]
-mockito = "0.2"
+mockito = "1.0"
